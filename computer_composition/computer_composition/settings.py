@@ -79,9 +79,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'computer_composition',
-        'USER': 'root',
-        'PASSWORD': 'wrtsng20030309',
-        'HOST': 'localhost',
+        'USER': 'question_planet_admin',
+        'PASSWORD': '123456',
+        'HOST': '182.92.102.246',
         'PORT': '3306',
         "ATOMIC_REQUESTS": True,
         "POOL": {
