@@ -134,6 +134,22 @@ def get_all_classes(request):
 
 @csrf_exempt
 @require_http_methods(['POST'])
+def get_class_student(request):
+    data = json.loads(request.body)
+    class_id = data.get('id')
+    student_class = StudentClass.objects.get(class_id=class_id)
+    student_list = student_class.student_list.all()
+    students = []
+    for student in student_list:
+        students.append({
+            'stu_id': student.stu_id,
+            'stu_name': student.stu_name
+        })
+    return JsonResponse({'students': students})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
 def add_student_to_class(request):
     data = json.loads(request.body)
     student_id = data.get('student_id')

@@ -11,6 +11,7 @@ urlpatterns = [
     path('update_class', update_class, name='update_class'),
     path('get_classes', get_classes, name='get_classes'),
     path('get_all_classes', get_all_classes, name='get_all_classes'),
+    path('get_class_student', get_class_student, name='get_class_student'),
     path('add_student_to_class', add_student_to_class, name='add_student_to_class'),
     path('add_students_list_to_class', add_students_list_to_class, name='add_students_list_to_class'),
     path('delete_student', delete_student, name='delete_student'),
