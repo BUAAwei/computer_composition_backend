@@ -14,6 +14,7 @@ urlpatterns = [
     path('get_class_student', get_class_student, name='get_class_student'),
     path('add_student_to_class', add_student_to_class, name='add_student_to_class'),
     path('add_students_list_to_class', add_students_list_to_class, name='add_students_list_to_class'),
+    path('export_students_list_in_class', export_students_list_in_class, name='export_students_list_in_class'),
     path('delete_student', delete_student, name='delete_student'),
     path('create_exam', create_exam, name='create_exam'),
     path('upload_excel', upload_excel, name='upload_excel'),

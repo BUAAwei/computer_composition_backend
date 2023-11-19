@@ -11,6 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from openpyxl import load_workbook
 import random
+import openpyxl
 
 from .models import *
 
@@ -196,6 +197,33 @@ def add_students_list_to_class(request):
         return JsonResponse({'msg': f'成功添加 {students_added} 个学生到班级'})
     except Exception as e:
         return JsonResponse({'msg': f'添加学生失败：{str(e)}'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def export_students_list_in_class(request):
+    data = json.loads(request.body)
+    class_id = data.get('class_id')
+    student_class = StudentClass.objects.get(class_id=class_id)
+
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+
+    students = student_class.student_list.all()
+    row = 1
+    for student in students:
+        sheet.cell(row=row, column=1, value=student.stu_id)
+        sheet.cell(row=row, column=2, value=student.stu_name)
+        row += 1
+
+    # 创建响应对象
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename=student_list_class_{class_id}.xlsx'
+
+    # 保存文件到响应对象
+    workbook.save(response)
+
+    return response
 
 
 @csrf_exempt
