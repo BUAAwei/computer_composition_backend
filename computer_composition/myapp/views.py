@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
@@ -7,9 +9,195 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+from openpyxl import load_workbook
+import random
+
+from .models import *
 
 
-from .models import StudentTable
+@csrf_exempt
+@require_http_methods(['POST'])
+def create_class(request):
+    data = json.loads(request.body)
+    class_name = data.get('name')
+    class_teacher = data.get('teacher')
+    class_year = data.get('year')
+    class_season = data.get('season')
+    new_class = StudentClass.objects.create(class_name=class_name, class_teacher=class_teacher, class_year=class_year, class_season=class_season)
+    new_class.save()
+    return JsonResponse({'class_id': new_class.class_id, 'msg': "创建班级成功"})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def delete_class(request):
+    data = json.loads(request.body)
+    class_id = data.get('id')
+    try:
+        student_class = StudentClass.objects.get(class_id=class_id)
+        student_class.delete()
+        return JsonResponse({'msg': '班级删除成功'})
+    except StudentClass.DoesNotExist:
+        return JsonResponse({'msg': '班级不存在'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def update_class(request):
+    data = json.loads(request.body)
+    class_id = data.get('id')
+    student_class = StudentClass.objects.get(class_id=class_id)
+    class_name = data.get('name')
+    class_teacher = data.get('teacher')
+    class_year = data.get('year')
+    class_season = data.get('season')
+    student_class.class_name = class_name
+    student_class.class_teacher = class_teacher
+    student_class.class_year = class_year
+    student_class.class_season = class_season
+    student_class.save()
+    return JsonResponse({'msg': '班级信息修改成功'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def get_classes(request):
+    data = json.loads(request.body)
+    class_year = data.get('year')
+    class_season = data.get('season')
+    student_classes = StudentClass.objects.filter(class_year=class_year, class_season=class_season)
+    class_list = []
+    for student_class in student_classes:
+        class_list.append({
+            'class_id': student_class.class_id,
+            'name': student_class.class_name,
+            'teacher': student_class.class_teacher,
+            'year': student_class.class_year,
+            'season': student_class.class_season,
+            'students': len(student_class.student_list.all())
+        })
+    return JsonResponse({'classes': class_list})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def get_all_classes(request):
+    student_classes = StudentClass.objects.all()
+    class_list = []
+    for student_class in student_classes:
+        class_list.append({
+            'class_id': student_class.class_id,
+            'name': student_class.class_name,
+            'teacher': student_class.class_teacher,
+            'year': student_class.class_year,
+            'season': student_class.class_season,
+            'students': len(student_class.student_list.all())
+        })
+    return JsonResponse({'classes': class_list})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def add_student_to_class(request):
+    data = json.loads(request.body)
+    student_id = data.get('student_id')
+    student_name = data.get('student_name')
+    class_id = data.get('class_id')
+
+    try:
+        student_class = StudentClass.objects.get(class_id=class_id)
+    except StudentClass.DoesNotExist:
+        return JsonResponse({'msg': '班级不存在'})
+
+    student, created = Student.objects.get_or_create(stu_id=student_id)
+    student.stu_name = student_name
+    student.save()
+
+    student_class.student_list.add(student)
+
+    return JsonResponse({'msg': '学生已成功加入班级'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def add_students_list_to_class(request):
+    class_id = request.POST.get('class_id')
+    file = request.FILES.get('file')
+
+    try:
+        student_class = StudentClass.objects.get(class_id=class_id)
+    except StudentClass.DoesNotExist:
+        return JsonResponse({'msg': '班级不存在'})
+
+    students_added = 0
+    try:
+        workbook = load_workbook(file)
+        sheet = workbook.active
+        for row in sheet.iter_rows(values_only=True):
+            student_id, student_name = row[:2]
+            student, created = Student.objects.get_or_create(stu_id=student_id)
+            student.stu_name = student_name
+            student.save()
+            student_class.student_list.add(student)
+            students_added += 1
+
+        return JsonResponse({'msg': f'成功添加 {students_added} 个学生到班级'})
+    except Exception as e:
+        return JsonResponse({'msg': f'添加学生失败：{str(e)}'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def delete_student(request):
+    data = json.loads(request.body)
+    stu_id = data.get('student_id')
+    stu_name = data.get('student_name')
+    try:
+        student = Student.objects.get(stu_id=stu_id, stu_name=stu_name)
+        student.delete()
+        return JsonResponse({'msg': '学生删除成功'})
+    except StudentClass.DoesNotExist:
+        return JsonResponse({'msg': '学生不存在'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def create_exam(request):
+    data = json.loads(request.body)
+    join_class = data.get('join_class')
+    exam_name = data.get('name')
+    exam_time = data.get('time')
+    num = data.get('num')
+    exam = Exam.objects.create(exam_name=exam_name, exam_time=exam_time)
+    students = []
+    for class_id in join_class:
+        try:
+            student_class = StudentClass.objects.get(class_id=class_id)
+            students.extend(student_class.student_list.all())
+            exam.join_class_list.add(student_class)
+        except StudentClass.DoesNotExist:
+            return JsonResponse({'msg': '班级不存在'})
+
+    random.shuffle(students)
+
+    total_students = len(students)
+    students_per_room = total_students // num + 1
+    for i in range(num):
+        room_name = f'Room {i + 1}'
+        room = ExamRoom.objects.create(er_name=room_name)
+        for j in range(students_per_room):
+            if i * students_per_room + j >= len(students):
+                break
+            student = students[i * students_per_room + j]
+            student_table = StudentTable.objects.create(stu_id=student.stu_id, stu_name=student.stu_name)
+            student_table.stu_room_num = i + 1
+            student_table.stu_seat_num = j + 1
+            student_table.save()
+            room.er_student_list.add(student_table)
+        room.save()
+        exam.exam_room_list.add(room)
+    exam.save()
+    return JsonResponse({'msg': '考试和考场创建成功'})
 
 
 @csrf_exempt
