@@ -17,6 +17,42 @@ from .models import *
 
 @csrf_exempt
 @require_http_methods(['POST'])
+def update_password(request):
+    data = json.loads(request.body)
+    new_password = data.get('password')
+    static_data = StaticData.objects.get(static_id=1)
+    static_data.static_password = new_password
+    static_data.save()
+    return JsonResponse({'msg': '密码修改成功'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def get_password(request):
+    static_data = StaticData.objects.get(static_id=1)
+    return JsonResponse({'password': static_data.static_password})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def update_cookie(request):
+    data = json.loads(request.body)
+    new_cookie = data.get('cookie')
+    static_data = StaticData.objects.get(static_id=1)
+    static_data.static_cookie = new_cookie
+    static_data.save()
+    return JsonResponse({'msg': 'cookie修改成功'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def get_cookie(request):
+    static_data = StaticData.objects.get(static_id=1)
+    return JsonResponse({'cookie': static_data.static_cookie})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
 def create_class(request):
     data = json.loads(request.body)
     class_name = data.get('name')

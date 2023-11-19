@@ -3,6 +3,12 @@ import json
 from django.db.models import *
 
 
+class StaticData(Model):
+    static_id = IntegerField(null=True, default=0)
+    static_password = CharField(max_length=100, null=True)
+    static_cookie = CharField(max_length=200, null=True)
+
+
 class StudentTable(Model):
     stu_id = CharField(max_length=100, null=True)
     stu_name = CharField(max_length=100, null=True)

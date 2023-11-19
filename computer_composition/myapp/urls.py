@@ -2,6 +2,10 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
+    path('update_password', update_password, name='update_password'),
+    path('get_password', get_password, name='get_password'),
+    path('update_cookie', update_cookie, name='update_cookie'),
+    path('get_cookie', get_cookie, name='get_cookie'),
     path('create_class', create_class, name='create_class'),
     path('delete_class', delete_class, name='delete_class'),
     path('update_class', update_class, name='update_class'),
