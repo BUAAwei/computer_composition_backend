@@ -162,8 +162,9 @@ def add_student_to_class(request):
     except StudentClass.DoesNotExist:
         return JsonResponse({'msg': '班级不存在'})
 
-    student, created = Student.objects.get_or_create(stu_id=student_id)
+    student = Student.objects.create(stu_id=student_id)
     student.stu_name = student_name
+    student.class_id = class_id
     student.save()
 
     student_class.student_list.add(student)
@@ -188,8 +189,9 @@ def add_students_list_to_class(request):
         sheet = workbook.active
         for row in sheet.iter_rows(values_only=True):
             student_id, student_name = row[:2]
-            student, created = Student.objects.get_or_create(stu_id=student_id)
+            student = Student.objects.create(stu_id=student_id)
             student.stu_name = student_name
+            student.class_id = class_id
             student.save()
             student_class.student_list.add(student)
             students_added += 1
@@ -232,12 +234,10 @@ def delete_student(request):
     data = json.loads(request.body)
     stu_id = data.get('student_id')
     stu_name = data.get('student_name')
-    try:
-        student = Student.objects.get(stu_id=stu_id, stu_name=stu_name)
-        student.delete()
-        return JsonResponse({'msg': '学生删除成功'})
-    except StudentClass.DoesNotExist:
-        return JsonResponse({'msg': '学生不存在'})
+    class_id = data.get('class_id')
+    student = Student.objects.get(stu_id=stu_id, stu_name=stu_name, class_id=class_id)
+    student.delete()
+    return JsonResponse({'msg': '学生删除成功'})
 
 
 @csrf_exempt
@@ -278,6 +278,40 @@ def create_exam(request):
         exam.exam_room_list.add(room)
     exam.save()
     return JsonResponse({'msg': '考试和考场创建成功'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def get_all_exams(request):
+    exams = Exam.objects.all()
+    exam_list = []
+    for exam in exams:
+        exam_list.append({
+            'exam_id': exam.exam_id,
+            'name': exam.exam_name,
+            'time': exam.exam_time,
+            'room_num': len(exam.exam_room_list.all()),
+            'class_num': len(exam.join_class_list.all())
+        })
+    return JsonResponse({'exam_list': exam_list})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def get_room_in_exam(request):
+    data = json.loads(request.body)
+    exam_id = data.get('id')
+    exam = Exam.objects.get(exam_id=exam_id)
+    room_list = exam.exam_room_list.all()
+    rooms = []
+    for room in room_list:
+        rooms.append({
+            'room_id': room.er_id,
+            'room_name': room.er_name,
+            'room_case_id': room.er_case_id,
+            'room_stu_num': len(room.er_student_list.all())
+        })
+    return JsonResponse({'rooms': rooms})
 
 
 @csrf_exempt
