@@ -316,6 +316,55 @@ def get_room_in_exam(request):
 
 @csrf_exempt
 @require_http_methods(['POST'])
+def get_class_in_exam(request):
+    data = json.loads(request.body)
+    exam_id = data.get('id')
+    exam = Exam.objects.get(exam_id=exam_id)
+    class_list = exam.join_class_list.all()
+    classes = []
+    for now_class in class_list:
+        classes.append({
+            'class_id': now_class.class_id,
+            'name': now_class.class_name,
+            'teacher': now_class.class_teacher,
+            'year': now_class.class_year,
+            'season': now_class.class_season,
+            'students': len(now_class.student_list.all())
+        })
+    return JsonResponse({'classes': classes})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def set_case_to_exam(request):
+    data = json.loads(request.body)
+    room_id = data.get('room_id')
+    case_id = data.get('case_id')
+    room = ExamRoom.objects.get(er_id=room_id)
+    room.er_case_id = case_id
+    room.save()
+    return JsonResponse({'msg': '修改成功'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def create_class_case(request):
+    data = json.loads(request.body)
+    case_name = data.get('name')
+    case_x_length = data.get('x')
+    case_y_length = data.get('y')
+    seats = data.get('seat_case')
+    case = ExamRoomCase.objects.create(erc_name=case_name, erc_x_length=case_x_length, erc_y_length=case_y_length)
+    for seat in seats:
+        seat_case = ExamRoomSeatCase.objects.create(ersc_seat_num=seat['num'], ersc_x=seat['x'], ersc_y=seat['y'])
+        seat_case.save()
+        case.erc_seats.add(seat_case)
+    case.save()
+    return JsonResponse({'msg': '模型创建成功'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
 def upload_excel(request):
     excel_file = request.FILES['file']
     # 使用pandas读取Excel文件
