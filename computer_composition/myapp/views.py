@@ -324,14 +324,18 @@ def get_student_info_in_room(request):
     data = json.loads(request.body)
     room_id = data.get('id')
     room = ExamRoom.objects.get(er_id=room_id)
+    room_case = ExamRoomCase.objects.get(erc_id=room.er_case_id)
     stu_info_list = room.er_student_list.all()
     stu_infos = []
     for stu_info in stu_info_list:
+        seat = room_case.erc_seats.get(ersc_seat_num=stu_info.stu_seat_num)
         stu_infos.append({
             'stu_id': stu_info.stu_id,
             'stu_name': stu_info.stu_name,
             'room_num': stu_info.stu_room_num,
             'seat_num': stu_info.stu_seat_num,
+            'seat_x': seat.ersc_x,
+            'seat_y': seat.ersc_y,
             'is_register': stu_info.is_register,
             'is_submit': stu_info.is_submit
         })
