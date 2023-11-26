@@ -286,12 +286,16 @@ def get_all_exams(request):
     exams = Exam.objects.all()
     exam_list = []
     for exam in exams:
+        class_list = []
+        classes = exam.join_class_list.all()
+        for now_class in classes:
+            class_list.append(now_class.class_id)
         exam_list.append({
             'exam_id': exam.exam_id,
             'name': exam.exam_name,
             'time': exam.exam_time,
             'room_num': len(exam.exam_room_list.all()),
-            'class_num': len(exam.join_class_list.all())
+            'all_class_id': class_list
         })
     return JsonResponse({'exam_list': exam_list})
 
