@@ -27,6 +27,7 @@ urlpatterns = [
     path('get_all_class_case', get_all_class_case, name='get_all_class_case'),
     path('get_seats_in_case', get_seats_in_case, name='get_seats_in_case'),
     path('delete_case', delete_case, name='delete_case'),
+    path('student_register', student_register, name='student_register'),
     path('upload_excel', upload_excel, name='upload_excel'),
     path('clear_database', clear_database, name='clear_database'),
     path('get_information', get_information, name='get_information')

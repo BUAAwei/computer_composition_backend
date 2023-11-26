@@ -447,6 +447,20 @@ def delete_case(request):
 
 @csrf_exempt
 @require_http_methods(['POST'])
+def student_register(request):
+    data = json.loads(request.body)
+    room_id = data.get('room_id')
+    seat_num = data.get('seat_num')
+    is_register = data.get('is_register')
+    exam_room = ExamRoom.objects.get(er_id=room_id)
+    student_table = exam_room.er_student_list.get(stu_seat_num=seat_num)
+    student_table.is_register = is_register
+    student_table.save()
+    return JsonResponse({'msg': f'学生{student_table.stu_id}的签到状态已改为{is_register}'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
 def upload_excel(request):
     excel_file = request.FILES['file']
     # 使用pandas读取Excel文件
