@@ -365,6 +365,40 @@ def create_class_case(request):
 
 @csrf_exempt
 @require_http_methods(['POST'])
+def get_all_class_case(request):
+    case_list = ExamRoomCase.objects.all()
+    cases = []
+    for case in case_list:
+        cases.append({
+            'case_id': case.erc_id,
+            'name': case.erc_name,
+            'x_length': case.erc_x_length,
+            'y_length': case.erc_y_length,
+            'seat_num': len(case.erc_seats.all())
+        })
+    return JsonResponse({'all_cases': cases})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def get_seats_in_case(request):
+    data = json.loads(request.body)
+    case_id = data.get('id')
+    case = ExamRoomCase.objects.get(erc_id=case_id)
+    seat_list = case.erc_seats.all()
+    seats = []
+    for seat in seat_list:
+        seats.append({
+            'seat_id': seat.ersc_id,
+            'number': seat.ersc_seat_num,
+            'x': seat.ersc_x,
+            'y': seat.ersc_y
+        })
+    return JsonResponse({'seats': seats})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
 def upload_excel(request):
     excel_file = request.FILES['file']
     # 使用pandas读取Excel文件
