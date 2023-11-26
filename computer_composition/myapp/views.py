@@ -340,6 +340,16 @@ def get_class_in_exam(request):
 
 @csrf_exempt
 @require_http_methods(['POST'])
+def delete_exam(request):
+    data = json.loads(request.body)
+    exam_id = data.get('id')
+    exam = Exam.objects.get(exam_id=exam_id)
+    exam.delete()
+    return JsonResponse({'msg': '考试删除成功'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
 def set_case_to_exam(request):
     data = json.loads(request.body)
     room_id = data.get('room_id')
@@ -399,6 +409,16 @@ def get_seats_in_case(request):
             'y': seat.ersc_y
         })
     return JsonResponse({'seats': seats})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def delete_case(request):
+    data = json.loads(request.body)
+    case_id = data.get('id')
+    case = ExamRoomCase.objects.get(erc_id=case_id)
+    case.delete()
+    return JsonResponse({'msg': '考场模型删除成功'})
 
 
 @csrf_exempt
