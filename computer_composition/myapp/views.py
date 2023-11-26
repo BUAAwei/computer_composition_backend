@@ -320,6 +320,26 @@ def get_room_in_exam(request):
 
 @csrf_exempt
 @require_http_methods(['POST'])
+def get_student_info_in_room(request):
+    data = json.loads(request.body)
+    room_id = data.get('id')
+    room = ExamRoom.objects.get(er_id=room_id)
+    stu_info_list = room.er_student_list.all()
+    stu_infos = []
+    for stu_info in stu_info_list:
+        stu_infos.append({
+            'stu_id': stu_info.stu_id,
+            'stu_name': stu_info.stu_name,
+            'room_num': stu_info.stu_room_num,
+            'seat_num': stu_info.stu_seat_num,
+            'is_register': stu_info.is_register,
+            'is_submit': stu_info.is_submit
+        })
+    return JsonResponse({'stu_infos': stu_infos})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
 def get_class_in_exam(request):
     data = json.loads(request.body)
     exam_id = data.get('id')

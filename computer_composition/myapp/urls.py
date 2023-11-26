@@ -19,6 +19,7 @@ urlpatterns = [
     path('create_exam', create_exam, name='create_exam'),
     path('get_all_exams', get_all_exams, name='get_all_exams'),
     path('get_room_in_exam', get_room_in_exam, name='get_room_in_exam'),
+    path('get_student_info_in_room', get_student_info_in_room, name='get_student_info_in_room'),
     path('get_class_in_exam', get_class_in_exam, name='get_class_in_exam'),
     path('delete_exam', delete_exam, name='delete_exam'),
     path('set_case_to_exam', set_case_to_exam, name='set_case_to_exam'),
