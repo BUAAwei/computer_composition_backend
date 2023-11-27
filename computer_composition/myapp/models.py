@@ -7,6 +7,8 @@ class StaticData(Model):
     static_id = IntegerField(null=True, default=0)
     static_password = CharField(max_length=100, null=True)
     static_cookie = CharField(max_length=200, null=True)
+    static_lvt = CharField(max_length=200, null=True)
+    static_lpvt = CharField(max_length=200, null=True)
 
 
 class StudentTable(Model):

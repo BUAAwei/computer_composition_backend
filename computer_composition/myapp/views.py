@@ -39,8 +39,12 @@ def get_password(request):
 def update_cookie(request):
     data = json.loads(request.body)
     new_cookie = data.get('cookie')
+    new_lvt = data.get('lvt')
+    new_lpvt = data.get('lpvt')
     static_data = StaticData.objects.get(static_id=1)
     static_data.static_cookie = new_cookie
+    static_data.static_lvt = new_lvt
+    static_data.static_lpvt = new_lpvt
     static_data.save()
     return JsonResponse({'msg': 'cookie修改成功'})
 
@@ -490,59 +494,46 @@ def clear_database(request):
 @csrf_exempt
 @require_http_methods(['POST'])
 def get_information(request):
+    data = json.loads(request.body)
+    exam_id_list = data.get('exam_id_list')
     # 初始化Chrome浏览器
-    driver = webdriver.Chrome()
-
-    # 打开网站
-    driver.get("https://judge.buaa.edu.cn/admin/courseAdmin/examAdmin/examResult.jsp?examID=647&courseFlag=1654")
-    # driver.get("https://judge.buaa.edu.cn/admin/login.jsp")
-    # adminname_input = driver.find_element(By.ID,'adminname')
-    # password_input = driver.find_element(By.ID,'password')
-    # # username_input = driver.find_element_by_name("adminname")
-    # # password_input = driver.find_element_by_name("password")
-    # adminname_input.send_keys("21371195")
-    # password_input.send_keys("21371195@buaa.edu.cn")
-    # password_input.send_keys(Keys.RETURN)
-    # 在页面上查找元素
-    # driver.add_cookie()
-    cookie_data = {
-        "JSESSIONID": "5DC762D32BDB0097C35A6A38DB748421",
-        "Hm_lvt_9eca16a516f8b449709378fbcbb6b200": "1698063708,1698064649,1698067832",
-        "Hm_lpvt_9eca16a516f8b449709378fbcbb6b200": "1698067835"
-    }
-    for name, value in cookie_data.items():
-        cookie = {
-            'name': name,
-            'value': value
-        }
-        driver.add_cookie(cookie)
-    driver.refresh()
-    # element = driver.find_element(By.CLASS_NAME,"even")
-    elements1 = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "odd")))
-    elements2 = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "even")))
-    elements = elements1 + elements2
+    options = webdriver.ChromeOptions()
+    options.add_argument('--ignore-certificate-errors')
+    driver = webdriver.Chrome(options=options)
     message_list = []
-    # 获取元素的文本内容
-    for element in elements:
-        text = element.text
-        parts = text.split()
-        if parts[-1] != '未提交答案':
-            print(parts[1], parts[2], '已提交答案')
-        else:
-            print(parts[1], parts[2], parts[-1])
-        if parts[-1] != '未提交答案':
+    static_data = StaticData.objects.get(static_id=1)
+    cookie_data = {
+        'JSESSIONID': static_data.static_cookie,
+        'Hm_lvt_9eca16a516f8b449709378fbcbb6b200': static_data.static_lvt,
+        'Hm_lpvt_9eca16a516f8b449709378fbcbb6b200': static_data.static_lpvt
+    }
+    for e_id in exam_id_list:
+        driver.get(
+            f"https://judge.buaa.edu.cn/admin/courseAdmin/examAdmin/examResult.jsp?examID={e_id}&courseFlag=1654")
+
+        for name, value in cookie_data.items():
+            cookie = {
+                'name': name,
+                'value': value
+            }
+            driver.add_cookie(cookie)
+        driver.refresh()
+        # element = driver.find_element(By.CLASS_NAME,"even")
+        elements1 = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "odd")))
+        elements2 = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "even")))
+        elements = elements1 + elements2
+
+        # 获取元素的文本内容
+        for element in elements:
+            text = element.text
+            parts = text.split()
+            print(parts[1], parts[2], parts[-3])
             message_info = {
                 "stu_id": parts[1],
                 "stu_name": parts[2],
-                "is_submit": '已提交答案'
+                "score": parts[-3]
             }
-        else:
-            message_info = {
-                "stu_id": parts[1],
-                "stu_name": parts[2],
-                "is_submit": parts[-1]
-            }
-        message_list.append(message_info)
+            message_list.append(message_info)
     # 关闭浏览器
     driver.quit()
     return JsonResponse({"submit_message": message_list})
