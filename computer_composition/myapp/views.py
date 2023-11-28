@@ -496,6 +496,12 @@ def clear_database(request):
 def get_information(request):
     data = json.loads(request.body)
     exam_id_list = data.get('exam_id_list')
+    er_id_list = data.get('er_id_list')
+    stu_table_list = []
+    for er_id in er_id_list:
+        er = ExamRoom.objects.get(er_id=er_id)
+        for stu_table in er.er_student_list.all():
+            stu_table_list.append(stu_table)
     # 初始化Chrome浏览器
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
@@ -528,10 +534,19 @@ def get_information(request):
             text = element.text
             parts = text.split()
             print(parts[1], parts[2], parts[-3])
+            room_num = -1
+            seat_num = -1
+            for stu_table in stu_table_list:
+                if stu_table.stu_id == parts[1]:
+                    room_num = stu_table.stu_room_num
+                    seat_num = stu_table.stu_seat_num
+                    break
             message_info = {
                 "stu_id": parts[1],
                 "stu_name": parts[2],
-                "score": parts[-3]
+                "score": parts[-3],
+                "room_num": room_num,
+                "seat_num": seat_num
             }
             message_list.append(message_info)
     # 关闭浏览器
