@@ -498,10 +498,12 @@ def get_information(request):
     exam_id_list = data.get('exam_id_list')
     er_id_list = data.get('er_id_list')
     stu_table_list = []
+    stu_er_list = []
     for er_id in er_id_list:
         er = ExamRoom.objects.get(er_id=er_id)
         for stu_table in er.er_student_list.all():
             stu_table_list.append(stu_table)
+            stu_er_list.append(er_id)
     # 初始化Chrome浏览器
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
@@ -536,9 +538,9 @@ def get_information(request):
             print(parts[1], parts[2], parts[-3])
             room_num = -1
             seat_num = -1
-            for stu_table in stu_table_list:
+            for index, stu_table in enumerate(stu_table_list):
                 if stu_table.stu_id == parts[1]:
-                    room_num = stu_table.stu_room_num
+                    room_num = stu_er_list[index]
                     seat_num = stu_table.stu_seat_num
                     break
             message_info = {
